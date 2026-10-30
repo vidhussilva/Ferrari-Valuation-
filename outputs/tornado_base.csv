@@ -1,0 +1,13 @@
+driver,value_at_low_input,value_at_high_input,base_value,swing
+WACC +/-0.5pt,335.56,254.71,289.62,80.85
+Terminal growth +/-0.5pt,264.03,323.27,289.62,59.24
+Raw beta +/-0.10,320.36,264.24,289.62,56.12
+Equity risk premium +/-0.5pt,320.13,264.40,289.62,55.73
+Shipments growth +/-1.0pt p.a.,269.14,311.94,289.62,42.80
+Price / mix growth +/-1.0pt p.a.,269.50,311.51,289.62,42.01
+Capex intensity +/-1.0pt of revenue,302.39,276.85,289.62,25.54
+Gross margin +/-1.0pt,279.73,299.51,289.62,19.79
+Effective tax rate +/-2.0pt,297.46,281.78,289.62,15.68
+Sponsorship & brand growth +/-2.0pt p.a.,283.94,296.32,289.62,12.38
+R&D intensity +/-0.5pt of revenue,294.54,284.70,289.62,9.83
+Customer advances +/-2.0pt of revenue,288.00,291.24,289.62,3.24
