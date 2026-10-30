@@ -1,0 +1,41 @@
+key,FY2023,FY2024,FY2025,unit,source
+net_revenues,5970.146,6676.668,7145.768,EUR m,Form 20-F FY2025 - consolidated income statement
+cost_of_revenues,2995.877,3329.483,3452.971,EUR m,Form 20-F FY2025 - consolidated income statement
+sga,462.6,561.1,642.5,EUR m,Form 20-F FY2025 (2025: selling 349.4 + G&A 293.1)
+rnd,881.559,894.092,918.861,EUR m,Form 20-F FY2025 - consolidated income statement
+ebit,1617,1888,2110,EUR m,FY2023 / FY2024 / FY2025 results press releases
+net_financial,-15.015,1,-46,EUR m,Form 20-F FY2023; FY2025 results press release
+net_profit,1257,1526,1600,EUR m,FY results press releases
+da,662.305,666.777,662,EUR m,Cash flow statement (Form 20-F FY2024); FY2025 Form 20-F
+eps_diluted,6.90,8.46,8.96,EUR,FY results press releases
+shipments,13663,13752,13640,units,FY results press releases
+rev_cars,,5728,6005,EUR m,FY2025 results press release - net revenues by type
+rev_sponsorship,,670,820,EUR m,FY2025 results press release - net revenues by type
+rev_other_reported,,279,321,EUR m,FY2025 results press release - net revenues by type
+bs_cash,1121.981,1742.214,1467.0,EUR m,Form 20-F FY2024 / FY2025 - statement of financial position
+bs_trade_receivables,261.380,349.2,360.3,EUR m,Form 20-F FY2024 / FY2025 - statement of financial position
+bs_inventories,948.514,1088.2,1113.9,EUR m,Form 20-F FY2024 / FY2025 - statement of financial position
+bs_fin_receivables,1451.158,1661.632,1613.396,EUR m,Form 20-F FY2024 / FY2025 - statement of financial position
+bs_ppe,1575.200,1828.784,2057.891,EUR m,Form 20-F FY2024 / FY2025 - statement of financial position
+bs_intangibles,1419.699,1545.664,1638.457,EUR m,Form 20-F FY2024 / FY2025 - statement of financial position
+bs_goodwill,785.182,785.182,785.182,EUR m,Form 20-F FY2025 - statement of financial position
+bs_dta,,236.791,226.005,EUR m,Form 20-F FY2025 - statement of financial position
+bs_total_noncurrent,,4477.243,4803.979,EUR m,Form 20-F FY2025 - statement of financial position
+bs_total_assets,8051.312,9497.146,9628.352,EUR m,Form 20-F FY2024 / FY2025 - statement of financial position
+bs_trade_payables,,945.657,841.256,EUR m,Form 20-F FY2025 - statement of financial position
+bs_other_liabilities,,1106.221,1391.616,EUR m,Form 20-F FY2025 - statement of financial position
+bs_tax_payables,,37.873,4.951,EUR m,Form 20-F FY2025 - statement of financial position
+bs_provisions,,206.212,184.481,EUR m,Form 20-F FY2025 - statement of financial position
+bs_employee_benefits,,134.147,,EUR m,Interim report 30-Sep-2025 (31-Dec-2024 comparative); 2025 derived in workbook
+bs_dtl,,110.016,254.387,EUR m,Form 20-F FY2025 - statement of financial position
+bs_debt,2477.186,3351.888,2884.220,EUR m,Form 20-F FY2024 / FY2025 - statement of financial position
+bs_other_fin_liabilities,,61.894,7.405,EUR m,Form 20-F FY2025 - statement of financial position
+bs_total_equity,3070.622,3543.238,3914.742,EUR m,Form 20-F FY2024 / FY2025 - statement of financial position
+cf_cfo,,1927,2349,EUR m,Form 20-F FY2024 / FY2025 - statement of cash flows
+cf_cfi,-866.452,-987.110,-944.138,EUR m,Form 20-F FY2025 - statement of cash flows
+cf_cff,-1109.407,-324.761,-1667.157,EUR m,Form 20-F FY2025 - statement of cash flows
+cf_dividends,,-439.918,-534.0,EUR m,Form 20-F FY2024 (2024); interim report 30-Sep-2025 (2025 - annual dividend paid in Q2)
+cf_buybacks,,-581.084,-784.0,EUR m,"2024: Form 20-F FY2024; 2025 approx.: 9M 556 (interim report) + remaining 228 of the 360 eighth tranche (to 12-Dec-2025)"
+kpi_ifcf,932,1025,1538,EUR m,FY results press releases (non-GAAP)
+kpi_nid,99,180,32,EUR m,FY results press releases (non-GAAP)
+kpi_capex,,,950,EUR m,FY2025 results press release ("approximately Euro 950 million")
