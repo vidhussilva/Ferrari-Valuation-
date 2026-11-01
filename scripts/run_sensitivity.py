@@ -48,6 +48,7 @@ def main(argv=None):
     res["tornado"].to_csv(out / "tornado_base.csv", index=False, float_format="%.2f")
     pct_labels(res["growth_margin"]).to_csv(out / "sensitivity_growth_margin_base.csv", float_format="%.2f")
     res["projections"].to_csv(out / "scenario_projections.csv", index=False, float_format="%.4f")
+    res["reverse_dcf"].to_csv(out / "reverse_dcf.csv", index=False, float_format="%.6f")
 
     with pd.ExcelWriter(out / "python_sensitivity_results.xlsx") as xw:
         summary.to_excel(xw, sheet_name="Scenario summary")
@@ -57,6 +58,7 @@ def main(argv=None):
         res["tornado"].to_excel(xw, sheet_name="Tornado (Base)", index=False)
         pct_labels(res["growth_margin"]).to_excel(xw, sheet_name="Growth x margin (Base)")
         res["projections"].to_excel(xw, sheet_name="Projections", index=False)
+        res["reverse_dcf"].to_excel(xw, sheet_name="Reverse DCF (Base)", index=False)
 
     charts.wacc_tgr_heatmap(res["wacc_g_value_per_share"]["Base"], inp.share_price, chart_dir / "wacc_g_heatmap.png")
     charts.tornado_chart(res["tornado"], chart_dir / "tornado.png")
@@ -73,6 +75,8 @@ def main(argv=None):
     t = res["tornado"].iloc[0]
     print(f"  Largest single driver: {t.driver} (EUR {min(t.value_at_low_input, t.value_at_high_input):,.0f}"
           f" - {max(t.value_at_low_input, t.value_at_high_input):,.0f})")
+    print(f"  Priced in at EUR {inp.share_price:,.2f} (one lever at a time): " + "; ".join(
+        f"{r.lever} {r.implied_level:.2%} (base {r.base_level:.2%})" for r in res["reverse_dcf"].itertuples()))
     print(f"Outputs written to {out}")
 
 

@@ -84,3 +84,20 @@ def test_base_case_is_anchored_to_company_targets(inp):
     assert ebitda[2030] >= 3600 and ebitda[2030] / rev[2030] >= 0.40
     assert p.loc["ebit", 2030] / rev[2030] >= 0.30
     assert -p.loc["capex", 2026:2030].sum() == pytest.approx(4700, rel=0.03)  # CMD ~EUR 4.7bn capex 2026-30
+
+
+def test_reverse_dcf_reproduces_share_price(inp):
+    rdcf = sensitivity.reverse_dcf(inp, "Base")
+    assert len(rdcf) == 4
+    for r in rdcf.itertuples():
+        if r.lever == "WACC":
+            v = engine.value(inp, "Base", wacc=r.implied_level)
+        elif r.lever == "Terminal growth":
+            v = engine.value(inp, "Base", tgr=r.implied_level)
+        else:
+            key = "price_mix_growth" if r.lever.startswith("Price") else "gross_margin"
+            v = engine.value(inp, "Base", shocks={key: r.change})
+        assert v.value_per_share == pytest.approx(inp.share_price, abs=0.01)
+    # the share price sits above the base-case value, so the market needs better-than-base assumptions
+    change = rdcf.set_index("lever")["change"]
+    assert (change.drop("WACC") > 0).all() and change["WACC"] < 0

@@ -97,6 +97,22 @@ The base case is calibrated to company guidance, not picked freehand:
   The full growth × margin grid is in `outputs/sensitivity_growth_margin_base.csv`.
 - **Reinvestment matters.** Cutting capex intensity by 1pt of revenue adds about €13/share.
 
+### What the market is pricing in
+
+A reverse DCF solves for the assumption at which the base-case DCF equals the €314.52 share price, moving one lever
+at a time (`outputs/reverse_dcf.csv`):
+
+| Lever | Base case | Implied by €314.52 | Change |
+|---|---:|---:|---:|
+| Price / mix growth (avg. 2026E–2035E) | 3.0% p.a. | 4.1% p.a. | +1.1pt |
+| Gross margin (avg. 2026E–2035E) | 52.6% | 55.2% | +2.5pt |
+| WACC | 6.68% | 6.39% | −0.29pt |
+| Terminal growth | 3.00% | 3.38% | +0.38pt |
+
+The ~8% gap is small in discount-rate terms: under 30bp of WACC. In operating terms it is a lot: either price/mix
+growth about a third above the plan, or gross margin 2.5pt above Ferrari's own 2030 trajectory. The share price
+assumes Ferrari keeps beating its targets.
+
 ![Projections](outputs/charts/scenario_projections.png)
 
 ## Python: automation and reconciliation

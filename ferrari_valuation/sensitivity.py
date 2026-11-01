@@ -4,6 +4,7 @@
 - wacc_tgr_table:     WACC x terminal-growth grid (same steps as the Excel Sensitivity sheet)
 - tornado:            one-at-a-time flex of each key driver around the base case
 - growth_margin_grid: revenue growth (price/mix) x gross-margin shifts
+- reverse_dcf:        lever values, one at a time, at which the DCF equals the share price
 """
 from __future__ import annotations
 
@@ -31,6 +32,14 @@ TORNADO_SPECS = [
     ("Customer advances +/-2.0pt of revenue", "shock", "ol_pct", -0.02, 0.02),
     ("Equity risk premium +/-0.5pt", "capm", "erp", -0.005, 0.005),
     ("Raw beta +/-0.10", "capm", "raw_beta", -0.10, 0.10),
+]
+
+# (label, kind, target, search bracket around the base level); kind as in TORNADO_SPECS
+REVERSE_DCF_LEVERS = [
+    ("Price / mix growth (avg. p.a.)", "shock", "price_mix_growth", (-0.05, 0.05)),
+    ("Gross margin (avg.)", "shock", "gross_margin", (-0.10, 0.10)),
+    ("WACC", "wacc", None, (-0.03, 0.03)),
+    ("Terminal growth", "tgr", None, (-0.02, 0.02)),
 ]
 
 
@@ -88,6 +97,47 @@ def growth_margin_grid(inp: ModelInputs, scenario: str = "Base", growth_shifts=N
                         columns=pd.Index(margin_shifts, name="Gross margin shift (pts)"))
 
 
+def _bisect(f, lo, hi, tol=1e-6, max_iter=200):
+    """Root of a monotonic f on [lo, hi]."""
+    f_lo, f_hi = f(lo), f(hi)
+    if np.sign(f_lo) == np.sign(f_hi):
+        raise ValueError(f"no root between {lo:.4f} and {hi:.4f} (f = {f_lo:.2f}, {f_hi:.2f})")
+    for _ in range(max_iter):
+        mid = (lo + hi) / 2
+        f_mid = f(mid)
+        if abs(f_mid) < tol:
+            break
+        if np.sign(f_mid) == np.sign(f_lo):
+            lo, f_lo = mid, f_mid
+        else:
+            hi = mid
+    return mid
+
+
+def reverse_dcf(inp: ModelInputs, scenario: str = "Base", target_price: float | None = None) -> pd.DataFrame:
+    """Back out, one lever at a time, the assumption at which the DCF value per share equals the share price.
+
+    Driver levers are uniform shifts applied to every forecast year, reported as the average level over 2026E-2035E."""
+    target = inp.share_price if target_price is None else target_price
+    base = engine.value(inp, scenario)
+    d = engine.drivers(inp, scenario)
+    rows = []
+    for label, kind, key, (lo, hi) in REVERSE_DCF_LEVERS:
+        if kind == "shock":
+            level = d[key].mean()
+            value_at = lambda x, key=key: engine.value(inp, scenario, shocks={key: x}).value_per_share  # noqa: E731
+        elif kind == "wacc":
+            level = base.wacc["wacc"]
+            value_at = lambda x, level=level: engine.value(inp, scenario, wacc=level + x).value_per_share  # noqa: E731
+        else:
+            level = base.tgr
+            value_at = lambda x, level=level: engine.value(inp, scenario, tgr=level + x).value_per_share  # noqa: E731
+        change = _bisect(lambda x: value_at(x) - target, lo, hi)
+        rows.append({"lever": label, "base_level": level, "implied_level": level + change, "change": change,
+                     "value_per_share": value_at(change), "share_price": target})
+    return pd.DataFrame(rows)
+
+
 def projections_by_scenario(inp: ModelInputs) -> pd.DataFrame:
     frames = []
     for sc in SCENARIOS:
@@ -107,5 +157,6 @@ def run_all(inp: ModelInputs) -> dict:
         "wacc_g_enterprise_value": wacc_tgr_table(inp, "Base", metric="enterprise_value"),
         "tornado": tornado(inp, "Base"),
         "growth_margin": growth_margin_grid(inp, "Base"),
+        "reverse_dcf": reverse_dcf(inp, "Base"),
         "projections": projections_by_scenario(inp),
     }
