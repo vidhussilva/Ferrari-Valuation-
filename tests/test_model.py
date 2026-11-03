@@ -101,3 +101,27 @@ def test_reverse_dcf_reproduces_share_price(inp):
     # the share price sits above the base-case value, so the market needs better-than-base assumptions
     change = rdcf.set_index("lever")["change"]
     assert (change.drop("WACC") > 0).all() and change["WACC"] < 0
+
+
+@pytest.mark.parametrize("scenario", SCENARIOS)
+def test_exit_multiple_ties_to_gordon_at_implied_multiple(inp, scenario):
+    v = engine.value(inp, scenario)
+    implied = sensitivity.gordon_implied_multiple(v)
+    p = v.projection
+    per_share, ev = engine.exit_multiple_grid(p.loc["ufcf"].to_numpy(dtype=float), p.loc["ebitda"].iloc[-1],
+                                              engine.discount_periods(inp), [v.wacc["wacc"]], [implied],
+                                              inp.nid, inp.shares)
+    assert per_share[0, 0] == pytest.approx(v.value_per_share, rel=1e-12)
+    assert ev[0, 0] == pytest.approx(v.enterprise_value, rel=1e-12)
+    table = sensitivity.exit_multiple_table(inp, scenario).to_numpy()
+    assert np.all(np.diff(table, axis=1) > 0) and np.all(np.diff(table, axis=0) < 0)
+
+
+def test_breakeven_exit_multiple_reproduces_share_price(inp):
+    m = sensitivity.breakeven_exit_multiple(inp, "Base")
+    v = engine.value(inp, "Base")
+    per_share, _ = engine.exit_multiple_grid(v.projection.loc["ufcf"].to_numpy(dtype=float),
+                                             v.projection.loc["ebitda"].iloc[-1], engine.discount_periods(inp),
+                                             [v.wacc["wacc"]], [m], inp.nid, inp.shares)
+    assert per_share[0, 0] == pytest.approx(inp.share_price, abs=1e-6)
+

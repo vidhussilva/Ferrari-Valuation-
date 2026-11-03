@@ -149,6 +149,18 @@ def dcf_grid(ufcf: np.ndarray, periods: np.ndarray, waccs, tgrs, nid: float, sha
     return (ev - nid) / shares, ev
 
 
+def exit_multiple_grid(ufcf: np.ndarray, terminal_ebitda: float, periods: np.ndarray, waccs, multiples,
+                       nid: float, shares: float):
+    """Vectorised DCF with an exit-multiple terminal value (EV / final-year EBITDA, discounted from the end of the
+    forecast). Returns (value per share, EV) arrays shaped (len(waccs), len(multiples))."""
+    w = np.asarray(waccs, dtype=float)[:, None]
+    m = np.asarray(multiples, dtype=float)[None, :]
+    n = len(ufcf)
+    pv_fcf = (ufcf[None, :] * (1 + w) ** -periods[None, :]).sum(axis=1, keepdims=True)
+    ev = pv_fcf + m * terminal_ebitda * (1 + w) ** -n
+    return (ev - nid) / shares, ev
+
+
 @dataclass
 class Valuation:
     projection: pd.DataFrame

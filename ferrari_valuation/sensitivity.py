@@ -5,6 +5,7 @@
 - tornado:            one-at-a-time flex of each key driver around the base case
 - growth_margin_grid: revenue growth (price/mix) x gross-margin shifts
 - reverse_dcf:        lever values, one at a time, at which the DCF equals the share price
+- exit_multiple_table: WACC x exit EV/EBITDA grid, cross-checking the Gordon-growth terminal value
 """
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from .layout import FCST_YEARS, SCENARIOS
 
 SCENARIO_WEIGHTS = {"Bear": 0.25, "Base": 0.50, "Bull": 0.25}
 GRID_STEPS = np.arange(-3, 4)
+EXIT_MULTIPLES = np.arange(12.0, 22.1, 2.0)  # EV / 2035E EBITDA
 
 # (label, kind, target, low, high); kind is "shock" (driver row), "wacc", "tgr" or "capm" (WACC-sheet input)
 TORNADO_SPECS = [
@@ -85,6 +87,30 @@ def tornado(inp: ModelInputs, scenario: str = "Base") -> pd.DataFrame:
         rows.append({"driver": label, "value_at_low_input": values[0], "value_at_high_input": values[1],
                      "base_value": base.value_per_share, "swing": abs(values[1] - values[0])})
     return pd.DataFrame(rows).sort_values("swing", ascending=False).reset_index(drop=True)
+
+
+def gordon_implied_multiple(v: engine.Valuation) -> float:
+    """Terminal EV / EBITDA implied by the Gordon-growth terminal value."""
+    return v.terminal_value / v.projection.loc["ebitda"].iloc[-1]
+
+
+def exit_multiple_table(inp: ModelInputs, scenario=None, multiples=EXIT_MULTIPLES, wacc_step: float | None = None):
+    """Value per share with an exit-multiple terminal value: WACC (rows) x EV / 2035E EBITDA (columns)."""
+    base = engine.value(inp, scenario)
+    waccs = base.wacc["wacc"] + GRID_STEPS * (inp.sens_steps[0] if wacc_step is None else wacc_step)
+    p = base.projection
+    per_share, _ = engine.exit_multiple_grid(p.loc["ufcf"].to_numpy(dtype=float), p.loc["ebitda"].iloc[-1],
+                                             engine.discount_periods(inp), waccs, multiples, inp.nid, inp.shares)
+    return pd.DataFrame(per_share, index=pd.Index(waccs, name="WACC"),
+                        columns=pd.Index(np.asarray(multiples, dtype=float), name="Exit EV / 2035E EBITDA"))
+
+
+def breakeven_exit_multiple(inp: ModelInputs, scenario=None, target_price: float | None = None) -> float:
+    """Exit EV / 2035E EBITDA at which the DCF value per share equals the share price (at the model WACC)."""
+    target = inp.share_price if target_price is None else target_price
+    v = engine.value(inp, scenario)
+    tv_needed = (target * inp.shares + inp.nid - v.sum_pv) * (1 + v.wacc["wacc"]) ** len(v.pv_ufcf)
+    return tv_needed / v.projection.loc["ebitda"].iloc[-1]
 
 
 def growth_margin_grid(inp: ModelInputs, scenario: str = "Base", growth_shifts=None, margin_shifts=None) -> pd.DataFrame:
@@ -158,5 +184,6 @@ def run_all(inp: ModelInputs) -> dict:
         "tornado": tornado(inp, "Base"),
         "growth_margin": growth_margin_grid(inp, "Base"),
         "reverse_dcf": reverse_dcf(inp, "Base"),
+        "exit_multiple": {sc: exit_multiple_table(inp, sc) for sc in SCENARIOS},
         "projections": projections_by_scenario(inp),
     }

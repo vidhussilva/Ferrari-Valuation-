@@ -113,6 +113,14 @@ The ~8% gap is small in discount-rate terms: under 30bp of WACC. In operating te
 growth about a third above the plan, or gross margin 2.5pt above Ferrari's own 2030 trajectory. The share price
 assumes Ferrari keeps beating its targets.
 
+### Exit-multiple cross-check
+
+A terminal value set at an exit EV/EBITDA multiple, instead of Gordon growth, gives the same €290 at 15.9x 2035E
+EBITDA, the multiple that 3% perpetual growth implies. At a 6.68% WACC each extra 2x of exit multiple adds about
+€26/share: 12x gives €239 and 22x gives €368 (`outputs/exit_multiple_base.csv`). The share price needs a 17.8x
+exit multiple. That is close to the ~19x 2026E EBITDA Ferrari trades on today, so the market assumes today's premium
+multiple still holds a decade out.
+
 ![Projections](outputs/charts/scenario_projections.png)
 
 ## Python: automation and reconciliation
