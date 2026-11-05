@@ -58,6 +58,8 @@ def main(argv=None):
     res["projections"].to_csv(out / "scenario_projections.csv", index=False, float_format="%.4f")
     res["reverse_dcf"].to_csv(out / "reverse_dcf.csv", index=False, float_format="%.6f")
     multiple_labels(res["exit_multiple"]["Base"]).to_csv(out / "exit_multiple_base.csv", float_format="%.2f")
+    mc_draws, mc_summary = res["monte_carlo"]
+    mc_summary.to_frame("Base").to_csv(out / "monte_carlo_summary.csv", float_format="%.4f")
 
     with pd.ExcelWriter(out / "python_sensitivity_results.xlsx") as xw:
         summary.to_excel(xw, sheet_name="Scenario summary")
@@ -70,11 +72,13 @@ def main(argv=None):
         res["reverse_dcf"].to_excel(xw, sheet_name="Reverse DCF (Base)", index=False)
         for sc, table in res["exit_multiple"].items():
             multiple_labels(table).to_excel(xw, sheet_name=f"Exit multiple ({sc})")
+        mc_summary.to_frame("Base").to_excel(xw, sheet_name="Monte Carlo (Base)")
 
     charts.wacc_tgr_heatmap(res["wacc_g_value_per_share"]["Base"], inp.share_price, chart_dir / "wacc_g_heatmap.png")
     charts.tornado_chart(res["tornado"], chart_dir / "tornado.png")
     charts.scenario_bars(summary, inp.share_price, chart_dir / "scenario_values.png")
     charts.projection_panels(res["projections"], chart_dir / "scenario_projections.png")
+    charts.monte_carlo_histogram(mc_draws, mc_summary, chart_dir / "monte_carlo.png")
 
     print(f"Share price at valuation date: EUR {inp.share_price:,.2f}")
     for sc in SCENARIOS:
@@ -96,6 +100,8 @@ def main(argv=None):
     print(f"  Exit multiple at the Gordon-implied {implied:.1f}x 2035E EBITDA: EUR {per_share[0, 0]:,.2f} "
           f"(Gordon DCF EUR {base.value_per_share:,.2f}); break-even exit multiple "
           f"{sensitivity.breakeven_exit_multiple(inp, 'Base'):.1f}x")
+    print(f"  Monte Carlo ({int(mc_summary.draws):,} draws): P10 EUR {mc_summary.p10:,.0f}, P50 EUR {mc_summary.p50:,.0f}, "
+          f"P90 EUR {mc_summary.p90:,.0f}; {mc_summary.prob_above_share_price:.0%} of draws above the share price")
     print(f"Outputs written to {out}")
 
 

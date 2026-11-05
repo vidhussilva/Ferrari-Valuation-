@@ -121,6 +121,16 @@ EBITDA, the multiple that 3% perpetual growth implies. At a 6.68% WACC each extr
 exit multiple. That is close to the ~19x 2026E EBITDA Ferrari trades on today, so the market assumes today's premium
 multiple still holds a decade out.
 
+### Monte Carlo simulation
+
+The simulation runs 5,000 draws around the base case. It varies WACC (sd 0.5pt) and terminal growth (sd 0.4pt, kept at
+least 1pt below WACC). It also shifts price/mix growth (sd 1pt a year), gross margin (sd 1pt) and capex intensity
+(sd 0.75pt). The median is €291, in line with the €290 base case, and the 10th–90th percentile range is €235–€378. The
+distribution has a long right tail (mean €301): value rises faster as WACC − g narrows than it falls as it widens.
+**34% of draws come out above the €314.52 share price** (`outputs/monte_carlo_summary.csv`).
+
+![Monte Carlo](outputs/charts/monte_carlo.png)
+
 ![Projections](outputs/charts/scenario_projections.png)
 
 ## Python: automation and reconciliation

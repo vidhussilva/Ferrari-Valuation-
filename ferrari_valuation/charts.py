@@ -135,3 +135,29 @@ def projection_panels(proj, path, title="Scenario projections, 2026E-2035E"):
     fig.suptitle(title, x=0.01, ha="left", fontweight="bold", fontsize=12)
     fig.tight_layout()
     return _save(fig, path)
+
+
+def monte_carlo_histogram(draws, summary, path, title="Monte Carlo: value per share, Base case"):
+    values = draws["value_per_share"].to_numpy()
+    cap = np.percentile(values, 99.5)  # long right tail from low WACC - g spreads; cut for readability
+    fig, ax = plt.subplots(figsize=(8.6, 4.8))
+    counts, _, _ = ax.hist(values[values <= cap], bins=60, color=SERIES["Base"], edgecolor=SURFACE, linewidth=0.6)
+    top = counts.max() * 1.32  # headroom so the labels sit above the bars
+    price, p10, p50, p90 = summary["share_price"], summary["p10"], summary["p50"], summary["p90"]
+    ax.axvspan(p10, p90, color=GRID, alpha=0.45, zorder=0, linewidth=0)
+    ax.axvline(price, color=TEXT, linewidth=1.2, linestyle=(0, (4, 3)))
+    ax.text(price + 4, top * 0.97, f"Share price EUR {price:,.1f}\n{summary['prob_above_share_price']:.0%} of draws above",
+            ha="left", va="top", fontsize=9, color=TEXT)
+    ax.axvline(p50, color=TEXT_2, linewidth=1)
+    ax.text(p50 - 4, top * 0.97, f"Median EUR {p50:,.0f}", ha="right", va="top", fontsize=9, color=TEXT_2)
+    ax.text(p90 + 4, top * 0.62, f"Shaded: P10-P90\nEUR {p10:,.0f} - {p90:,.0f}", ha="left", va="top", fontsize=9,
+            color=TEXT_2)
+    ax.set_ylim(0, top)
+    ax.set_xlabel("Implied value per share (EUR)")
+    ax.set_ylabel("Draws")
+    ax.grid(axis="y", color=GRID, linewidth=0.8)
+    ax.set_axisbelow(True)
+    ax.set_title(title, pad=22)
+    ax.text(0, 1.015, f"{int(summary['draws']):,} draws: WACC, terminal growth, price/mix growth, gross margin and capex "
+            f"intensity; x-axis cut at the 99.5th percentile", transform=ax.transAxes, fontsize=9, color=TEXT_2)
+    return _save(fig, path)

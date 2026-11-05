@@ -6,6 +6,7 @@
 - growth_margin_grid: revenue growth (price/mix) x gross-margin shifts
 - reverse_dcf:        lever values, one at a time, at which the DCF equals the share price
 - exit_multiple_table: WACC x exit EV/EBITDA grid, cross-checking the Gordon-growth terminal value
+- monte_carlo:        simulated value-per-share distribution around the base case
 """
 from __future__ import annotations
 
@@ -19,6 +20,9 @@ from .layout import FCST_YEARS, SCENARIOS
 SCENARIO_WEIGHTS = {"Bear": 0.25, "Base": 0.50, "Bull": 0.25}
 GRID_STEPS = np.arange(-3, 4)
 EXIT_MULTIPLES = np.arange(12.0, 22.1, 2.0)  # EV / 2035E EBITDA
+# Monte Carlo standard deviations: WACC / terminal growth levels, and uniform shifts to each driver row
+MC_SD = {"wacc": 0.005, "tgr": 0.004, "price_mix_growth": 0.01, "gross_margin": 0.01, "capex_pct": 0.0075}
+MC_MIN_SPREAD = 0.01  # terminal growth is capped at WACC - 1pt
 
 # (label, kind, target, low, high); kind is "shock" (driver row), "wacc", "tgr" or "capm" (WACC-sheet input)
 TORNADO_SPECS = [
@@ -113,6 +117,32 @@ def breakeven_exit_multiple(inp: ModelInputs, scenario=None, target_price: float
     return tv_needed / v.projection.loc["ebitda"].iloc[-1]
 
 
+def monte_carlo(inp: ModelInputs, n: int = 5000, seed: int = 42, scenario: str = "Base", sd: dict = MC_SD):
+    """Simulate value per share: normal draws for WACC and terminal growth, plus uniform shifts to price/mix growth,
+    gross margin and capex intensity. Returns (draws, summary).
+
+    Operating shocks need a fresh projection per draw; WACC and g are then applied to every draw in one pass."""
+    rng = np.random.default_rng(seed)
+    base = engine.value(inp, scenario)
+    w = rng.normal(base.wacc["wacc"], sd["wacc"], n)
+    g = np.minimum(rng.normal(base.tgr, sd["tgr"], n), w - MC_MIN_SPREAD)
+    shocks = {k: rng.normal(0.0, sd[k], n) for k in ("price_mix_growth", "gross_margin", "capex_pct")}
+    ufcf = np.array([engine.project(inp, scenario, shocks={k: v[i] for k, v in shocks.items()}).loc["ufcf"]
+                     for i in range(n)], dtype=float)
+    periods = engine.discount_periods(inp)
+    pv_fcf = (ufcf * (1 + w[:, None]) ** -periods[None, :]).sum(axis=1)
+    pv_tv = ufcf[:, -1] * (1 + g) / (w - g) * (1 + w) ** -ufcf.shape[1]
+    values = (pv_fcf + pv_tv - inp.nid) / inp.shares
+    draws = pd.DataFrame({"wacc": w, "tgr": g, **shocks, "value_per_share": values})
+    pct = np.percentile(values, [10, 25, 50, 75, 90])
+    summary = pd.Series({
+        "draws": n, "seed": seed, "base_value": base.value_per_share, "mean": values.mean(),
+        **{f"p{q}": v for q, v in zip((10, 25, 50, 75, 90), pct)},
+        "share_price": inp.share_price, "prob_above_share_price": (values > inp.share_price).mean(),
+    })
+    return draws, summary
+
+
 def growth_margin_grid(inp: ModelInputs, scenario: str = "Base", growth_shifts=None, margin_shifts=None) -> pd.DataFrame:
     """Value per share when revenue-per-car growth (rows) and gross margin (columns) shift by the given points."""
     growth_shifts = np.arange(-0.02, 0.0201, 0.01) if growth_shifts is None else np.asarray(growth_shifts)
@@ -185,5 +215,6 @@ def run_all(inp: ModelInputs) -> dict:
         "growth_margin": growth_margin_grid(inp, "Base"),
         "reverse_dcf": reverse_dcf(inp, "Base"),
         "exit_multiple": {sc: exit_multiple_table(inp, sc) for sc in SCENARIOS},
+        "monte_carlo": monte_carlo(inp),
         "projections": projections_by_scenario(inp),
     }

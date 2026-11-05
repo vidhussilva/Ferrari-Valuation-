@@ -125,3 +125,12 @@ def test_breakeven_exit_multiple_reproduces_share_price(inp):
                                              [v.wacc["wacc"]], [m], inp.nid, inp.shares)
     assert per_share[0, 0] == pytest.approx(inp.share_price, abs=1e-6)
 
+
+def test_monte_carlo_is_reproducible(inp):
+    _, a = sensitivity.monte_carlo(inp, n=200, seed=7)
+    draws, b = sensitivity.monte_carlo(inp, n=200, seed=7)
+    _, c = sensitivity.monte_carlo(inp, n=200, seed=8)
+    assert a["p50"] == b["p50"] and a["p50"] != c["p50"]
+    assert a["p10"] < a["p25"] < a["p50"] < a["p75"] < a["p90"]
+    assert (draws["wacc"] - draws["tgr"] >= sensitivity.MC_MIN_SPREAD - 1e-12).all()
+
