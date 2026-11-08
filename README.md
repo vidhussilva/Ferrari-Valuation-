@@ -1,5 +1,7 @@
 # Ferrari N.V. — Equity Valuation & Financial Modelling
 
+[![tests](https://github.com/vidhussilva/Ferrari-Valuation-/actions/workflows/tests.yml/badge.svg)](https://github.com/vidhussilva/Ferrari-Valuation-/actions/workflows/tests.yml)
+
 An integrated **three-statement model and DCF valuation of Ferrari N.V. (NYSE / EXM: RACE)** in Excel. A Python
 companion (pandas / NumPy) re-implements the model from the workbook's inputs, automates the sensitivity analysis and
 reconciles every output back to the Excel model.
@@ -47,7 +49,8 @@ cases: about 19x 2026E EBITDA and 33x 2026E earnings.
 │   ├── run_sensitivity.py        # automated sensitivity analysis -> outputs/
 │   └── reconcile_with_excel.py   # Excel vs Python reconciliation -> outputs/
 ├── outputs/                      # CSVs, python_sensitivity_results.xlsx, charts/, reconciliation report
-└── tests/test_model.py           # integrity + reconciliation tests (pytest)
+├── tests/test_model.py           # integrity + reconciliation tests (pytest)
+└── .github/workflows/tests.yml   # runs the tests and the reconciliation on every push
 ```
 
 ## The Excel model
