@@ -1,0 +1,5 @@
+method,low,high,marker
+Scenarios (Bear to Bull),212.45,360.72,289.62
+"DCF: WACC +/-0.5pt, g +/-0.5pt",235.42,383.77,289.62
+Exit EV/EBITDA 12x-22x (2035E),238.74,368.42,289.62
+Monte Carlo (P10 to P90),235.16,377.72,290.90

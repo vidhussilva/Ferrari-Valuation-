@@ -21,7 +21,11 @@ WACC is **6.68%** (CAPM cost of equity 6.89%) and terminal growth is **3.0%**. T
 implies 15.9x 2035E EBITDA. At its year-end 2025 price the market is paying for something between the base and bull
 cases: about 19x 2026E EBITDA and 33x 2026E earnings.
 
-![Scenario values](outputs/charts/scenario_values.png)
+![Valuation football field](outputs/charts/football_field.png)
+
+Every method puts the base-case value below the €314.52 share price. The price sits in the upper half of each
+range, between the base and bull cases, and 34% of Monte Carlo draws come out above it. Value by scenario:
+[`scenario_values.png`](outputs/charts/scenario_values.png).
 
 ---
 

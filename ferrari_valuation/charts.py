@@ -161,3 +161,31 @@ def monte_carlo_histogram(draws, summary, path, title="Monte Carlo: value per sh
     ax.text(0, 1.015, f"{int(summary['draws']):,} draws: WACC, terminal growth, price/mix growth, gross margin and capex "
             f"intensity; x-axis cut at the 99.5th percentile", transform=ax.transAxes, fontsize=9, color=TEXT_2)
     return _save(fig, path)
+
+
+def football_field(df, share_price, path, title="Valuation summary: value per share by method (EUR)"):
+    df = df.iloc[::-1].reset_index(drop=True)  # first method plotted on top
+    fig, ax = plt.subplots(figsize=(9, 0.8 * len(df) + 1.9))
+    y = np.arange(len(df))
+    ax.barh(y, df["high"] - df["low"], left=df["low"], height=0.5, color=SERIES["Base"], edgecolor=SURFACE,
+            linewidth=1)
+    ax.scatter(df["marker"], y, marker="|", s=420, color="white", linewidths=2.2, zorder=3)
+    for i, row in df.iterrows():
+        ax.text(row["low"] - 4, i, f"{row['low']:,.0f}", ha="right", va="center", fontsize=9, color=TEXT_2)
+        ax.text(row["high"] + 4, i, f"{row['high']:,.0f}", ha="left", va="center", fontsize=9, color=TEXT_2)
+    ax.axvline(share_price, color=TEXT, linewidth=1.2, linestyle=(0, (4, 3)), zorder=4)
+    ax.text(share_price + 3, len(df) - 0.42, f"Share price EUR {share_price:,.1f} (31-Dec-2025)", ha="left",
+            va="bottom", fontsize=9, color=TEXT)
+    ax.set_ylim(-0.6, len(df) - 0.05)
+    ax.set_yticks(y, df["method"])
+    ax.tick_params(axis="y", length=0)
+    lo, hi = df["low"].min(), df["high"].max()
+    pad = (hi - lo) * 0.1
+    ax.set_xlim(lo - pad, hi + pad)
+    ax.set_xlabel("Implied value per share (EUR)")
+    ax.grid(axis="x", color=GRID, linewidth=0.8)
+    ax.set_axisbelow(True)
+    ax.set_title(title, pad=22)
+    ax.text(0, 1.015, "White tick = base case (Monte Carlo: median)", transform=ax.transAxes, fontsize=9,
+            color=TEXT_2)
+    return _save(fig, path)

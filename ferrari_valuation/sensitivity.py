@@ -7,6 +7,7 @@
 - reverse_dcf:        lever values, one at a time, at which the DCF equals the share price
 - exit_multiple_table: WACC x exit EV/EBITDA grid, cross-checking the Gordon-growth terminal value
 - monte_carlo:        simulated value-per-share distribution around the base case
+- football_field:     value-per-share range by method, for the summary chart
 """
 from __future__ import annotations
 
@@ -194,6 +195,31 @@ def reverse_dcf(inp: ModelInputs, scenario: str = "Base", target_price: float | 
     return pd.DataFrame(rows)
 
 
+def football_field(inp: ModelInputs, mc_summary: pd.Series | None = None, scenario: str = "Base",
+                   wacc_shift: float = 0.005, tgr_shift: float = 0.005,
+                   multiples: tuple = (EXIT_MULTIPLES[0], EXIT_MULTIPLES[-1])) -> pd.DataFrame:
+    """Low / high value per share for each valuation method, plus a marker (base case; Monte Carlo median)."""
+    base = engine.value(inp, scenario)
+    ufcf = base.projection.loc["ufcf"].to_numpy(dtype=float)
+    periods = engine.discount_periods(inp)
+    w, g = base.wacc["wacc"], base.tgr
+    dcf, _ = engine.dcf_grid(ufcf, periods, [w - wacc_shift, w + wacc_shift], [g - tgr_shift, g + tgr_shift],
+                             inp.nid, inp.shares)
+    exit_values, _ = engine.exit_multiple_grid(ufcf, base.projection.loc["ebitda"].iloc[-1], periods, [w],
+                                               list(multiples), inp.nid, inp.shares)
+    scen = {sc: engine.value(inp, sc).value_per_share for sc in SCENARIOS}
+    rows = [
+        ("Scenarios (Bear to Bull)", scen["Bear"], scen["Bull"], scen[scenario]),
+        (f"DCF: WACC +/-{wacc_shift * 100:.1f}pt, g +/-{tgr_shift * 100:.1f}pt", dcf.min(), dcf.max(),
+         base.value_per_share),
+        (f"Exit EV/EBITDA {multiples[0]:.0f}x-{multiples[1]:.0f}x (2035E)", exit_values.min(), exit_values.max(),
+         base.value_per_share),
+    ]
+    if mc_summary is not None:
+        rows.append(("Monte Carlo (P10 to P90)", mc_summary["p10"], mc_summary["p90"], mc_summary["p50"]))
+    return pd.DataFrame(rows, columns=["method", "low", "high", "marker"])
+
+
 def projections_by_scenario(inp: ModelInputs) -> pd.DataFrame:
     frames = []
     for sc in SCENARIOS:
@@ -207,6 +233,7 @@ def projections_by_scenario(inp: ModelInputs) -> pd.DataFrame:
 
 
 def run_all(inp: ModelInputs) -> dict:
+    mc = monte_carlo(inp)
     return {
         "scenario_summary": scenario_summary(inp),
         "wacc_g_value_per_share": {sc: wacc_tgr_table(inp, sc) for sc in SCENARIOS},
@@ -215,6 +242,7 @@ def run_all(inp: ModelInputs) -> dict:
         "growth_margin": growth_margin_grid(inp, "Base"),
         "reverse_dcf": reverse_dcf(inp, "Base"),
         "exit_multiple": {sc: exit_multiple_table(inp, sc) for sc in SCENARIOS},
-        "monte_carlo": monte_carlo(inp),
+        "monte_carlo": mc,
+        "football_field": football_field(inp, mc[1]),
         "projections": projections_by_scenario(inp),
     }

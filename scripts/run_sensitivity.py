@@ -60,6 +60,7 @@ def main(argv=None):
     multiple_labels(res["exit_multiple"]["Base"]).to_csv(out / "exit_multiple_base.csv", float_format="%.2f")
     mc_draws, mc_summary = res["monte_carlo"]
     mc_summary.to_frame("Base").to_csv(out / "monte_carlo_summary.csv", float_format="%.4f")
+    res["football_field"].to_csv(out / "football_field.csv", index=False, float_format="%.2f")
 
     with pd.ExcelWriter(out / "python_sensitivity_results.xlsx") as xw:
         summary.to_excel(xw, sheet_name="Scenario summary")
@@ -73,12 +74,14 @@ def main(argv=None):
         for sc, table in res["exit_multiple"].items():
             multiple_labels(table).to_excel(xw, sheet_name=f"Exit multiple ({sc})")
         mc_summary.to_frame("Base").to_excel(xw, sheet_name="Monte Carlo (Base)")
+        res["football_field"].to_excel(xw, sheet_name="Football field", index=False)
 
     charts.wacc_tgr_heatmap(res["wacc_g_value_per_share"]["Base"], inp.share_price, chart_dir / "wacc_g_heatmap.png")
     charts.tornado_chart(res["tornado"], chart_dir / "tornado.png")
     charts.scenario_bars(summary, inp.share_price, chart_dir / "scenario_values.png")
     charts.projection_panels(res["projections"], chart_dir / "scenario_projections.png")
     charts.monte_carlo_histogram(mc_draws, mc_summary, chart_dir / "monte_carlo.png")
+    charts.football_field(res["football_field"], inp.share_price, chart_dir / "football_field.png")
 
     print(f"Share price at valuation date: EUR {inp.share_price:,.2f}")
     for sc in SCENARIOS:

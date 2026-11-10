@@ -134,3 +134,13 @@ def test_monte_carlo_is_reproducible(inp):
     assert a["p10"] < a["p25"] < a["p50"] < a["p75"] < a["p90"]
     assert (draws["wacc"] - draws["tgr"] >= sensitivity.MC_MIN_SPREAD - 1e-12).all()
 
+
+def test_football_field_ranges(inp):
+    _, mc = sensitivity.monte_carlo(inp, n=200, seed=1)
+    ff = sensitivity.football_field(inp, mc)
+    assert len(ff) == 4 and (ff["low"] < ff["marker"]).all() and (ff["marker"] < ff["high"]).all()
+    base = engine.value(inp, "Base").value_per_share
+    assert ff.loc[:2, "marker"].tolist() == pytest.approx([base] * 3)
+    assert ff.loc[0, ["low", "high"]].tolist() == pytest.approx(
+        [engine.value(inp, "Bear").value_per_share, engine.value(inp, "Bull").value_per_share])
+
