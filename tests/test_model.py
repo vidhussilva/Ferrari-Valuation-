@@ -144,3 +144,18 @@ def test_football_field_ranges(inp):
     assert ff.loc[0, ["low", "high"]].tolist() == pytest.approx(
         [engine.value(inp, "Bear").value_per_share, engine.value(inp, "Bull").value_per_share])
 
+
+def test_scenario_weighting(inp):
+    values = {sc: engine.value(inp, sc).value_per_share for sc in SCENARIOS}
+    w = sensitivity.parse_weights("20,50,30")
+    assert w == pytest.approx({"Bear": 0.2, "Base": 0.5, "Bull": 0.3})
+    summary = sensitivity.scenario_summary(inp, w)
+    expected = 0.2 * values["Bear"] + 0.5 * values["Base"] + 0.3 * values["Bull"]
+    assert summary.loc["value_per_share", "Probability-weighted"] == pytest.approx(expected)
+    assert summary.loc["upside", "Probability-weighted"] == pytest.approx(expected / inp.share_price - 1)
+    base_only = sensitivity.scenario_summary(inp, sensitivity.parse_weights("0,100,0"))
+    assert base_only.loc["value_per_share", "Probability-weighted"] == pytest.approx(values["Base"])
+    for bad in ("25,50", "30,50,30", "-10,60,50", "a,b,c"):
+        with pytest.raises(ValueError):
+            sensitivity.parse_weights(bad)
+

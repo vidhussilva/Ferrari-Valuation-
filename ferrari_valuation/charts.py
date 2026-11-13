@@ -103,7 +103,8 @@ def scenario_bars(summary, share_price, path, title="DCF value per share by scen
     ax.axhline(share_price, color=TEXT, linewidth=1.2, linestyle=(0, (4, 3)))
     ax.text(-0.45, share_price + 4, f"Share price EUR {share_price:,.1f} (31-Dec-2025)", ha="left", va="bottom",
             fontsize=9, color=TEXT)
-    ax.set_xticks(x, ["Bear", "Base", "Bull", "Prob.-weighted\n(25/50/25)"])
+    weights = "/".join(f"{summary.loc['weight', sc] * 100:g}" for sc in labels[:3])
+    ax.set_xticks(x, ["Bear", "Base", "Bull", f"Prob.-weighted\n({weights})"])
     ax.tick_params(axis="x", length=0)
     ax.set_ylabel("EUR per share")
     ax.set_ylim(0, max(values + [share_price]) * 1.22)

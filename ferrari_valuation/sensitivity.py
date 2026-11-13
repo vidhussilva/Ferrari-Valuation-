@@ -50,6 +50,23 @@ REVERSE_DCF_LEVERS = [
 ]
 
 
+def parse_weights(text: str) -> dict:
+    """Parse Bear/Base/Bull weights in percent, e.g. "25,50,25", into fractions that sum to 1."""
+    try:
+        values = [float(v) for v in text.split(",")]
+    except ValueError:
+        raise ValueError(f"weights must be numbers, e.g. 25,50,25 (got {text!r})") from None
+    if len(values) != len(SCENARIOS):
+        raise ValueError(f"give one weight per scenario ({'/'.join(SCENARIOS)}), got {len(values)}")
+    if min(values) < 0 or abs(sum(values) - 100) > 1e-9:
+        raise ValueError(f"weights must be non-negative and sum to 100 (got {sum(values):g})")
+    return {sc: v / 100 for sc, v in zip(SCENARIOS, values)}
+
+
+def weights_label(weights: dict) -> str:
+    return "/".join(f"{weights[sc] * 100:g}" for sc in SCENARIOS)
+
+
 def scenario_summary(inp: ModelInputs, weights: dict = SCENARIO_WEIGHTS) -> pd.DataFrame:
     cols = {sc: engine.value(inp, sc).summary() for sc in SCENARIOS}
     df = pd.DataFrame(cols)
@@ -232,10 +249,10 @@ def projections_by_scenario(inp: ModelInputs) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
-def run_all(inp: ModelInputs) -> dict:
+def run_all(inp: ModelInputs, weights: dict = SCENARIO_WEIGHTS) -> dict:
     mc = monte_carlo(inp)
     return {
-        "scenario_summary": scenario_summary(inp),
+        "scenario_summary": scenario_summary(inp, weights),
         "wacc_g_value_per_share": {sc: wacc_tgr_table(inp, sc) for sc in SCENARIOS},
         "wacc_g_enterprise_value": wacc_tgr_table(inp, "Base", metric="enterprise_value"),
         "tornado": tornado(inp, "Base"),

@@ -27,6 +27,22 @@ Every method puts the base-case value below the €314.52 share price. The price
 range, between the base and bull cases, and 34% of Monte Carlo draws come out above it. Value by scenario:
 [`scenario_values.png`](outputs/charts/scenario_values.png).
 
+## Conclusions
+
+- **Fairly valued to modestly overvalued.** The base case gives €290 per share, 8% below the €314.52 year-end price.
+  Weighting Bear/Base/Bull 25/50/25 gives €288 (−8%), and the Monte Carlo median is €291. To try other weights, run
+  `python scripts/run_sensitivity.py --weights 20,50,30`.
+- **The price assumes Ferrari beats its own plan.** The reverse DCF needs one of: price/mix growth of 4.1% a year
+  instead of 3.0%, gross margin of 55.2% instead of 52.6%, WACC of 6.39% instead of 6.68%, or terminal growth of
+  3.38% instead of 3.0%. On an exit-multiple basis, Ferrari must still be valued at 17.8x EBITDA in 2035.
+- **Main risks to the valuation:**
+  - *Discount rate.* ±0.5pt of WACC moves the value from €255 to €336. A beta of 1.0 instead of 0.73 cuts it to
+    about €209.
+  - *Volume and price/mix execution.* ±1pt a year on either moves the value by roughly €20 a share (€269–€312).
+    Ferrari deliberately caps volumes, so growth has to keep coming from mix and personalisation.
+  - *Capex.* The ~€4.7bn 2026–2030 plan is heavy. ±1pt of revenue in capex intensity is worth about €13 a share
+    (€277–€302).
+
 ---
 
 ## What's in the project
@@ -146,6 +162,7 @@ distribution has a long right tail (mean €301): value rises faster as WACC −
 pip install -r requirements.txt
 
 python scripts/run_sensitivity.py                     # scenarios, WACC x g, tornado, growth x margin -> outputs/
+python scripts/run_sensitivity.py --weights 20,50,30   # same, with custom Bear/Base/Bull weights
 python scripts/reconcile_with_excel.py                # reconcile against the values saved in the workbook
 python scripts/reconcile_with_excel.py --all-scenarios  # recalc Bear/Base/Bull via LibreOffice, reconcile each
 python -m pytest -q                                   # integrity, anchor and reconciliation tests
